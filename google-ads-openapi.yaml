@@ -4,7 +4,7 @@ info:
   version: "1.0.0"
   description: OpenAPI spec for Google Ads API v17
 servers:
-  - url: http://localhost:3000
+  - url: https://google-ads-beryl.vercel.app
 components:
   securitySchemes:
     google_oauth:
