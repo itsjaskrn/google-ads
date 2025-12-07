@@ -44,6 +44,7 @@ app.all('*', async (req, res) => {
     console.log('=== Request ===');
     console.log('Method:', req.method);
     console.log('Path:', req.path);
+    console.log('Original URL:', req.originalUrl);
     console.log('Has Auth:', !!req.headers.authorization);
     
     if (req.path === '/' || req.path.startsWith('/oauth')) {
@@ -54,7 +55,9 @@ app.all('*', async (req, res) => {
       return res.status(401).json({ error: 'Missing Authorization header' });
     }
     
-    let path = req.path.replace(/-/g, '');
+    let path = decodeURIComponent(req.originalUrl).replace(/-/g, '');
+    
+    console.log('Forwarding to:', `${GOOGLE_ADS_API}${path}`);
     
     const response = await axios({
       method: req.method,
@@ -70,7 +73,7 @@ app.all('*', async (req, res) => {
     console.log('Success:', response.status);
     res.json(response.data);
   } catch (error) {
-    console.error('Error:', error.response?.status, error.response?.data);
+    console.error('Error:', error.response?.status, JSON.stringify(error.response?.data));
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
 });
