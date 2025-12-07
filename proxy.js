@@ -60,8 +60,7 @@ app.post('/v17/customers/:customerId/googleAds\\:search', async (req, res) => {
 
     const customer = client.Customer({
       customer_id: customerId.replace(/-/g, ''),
-      refresh_token: accessToken,
-      login_customer_id: customerId.replace(/-/g, '')
+      access_token: accessToken
     });
 
     const results = await customer.query(query, { page_size: pageSize || 100 });
