@@ -107,5 +107,13 @@ app.all('/v17/*', async (req, res) => {
   }
 });
 
+app.use((req, res) => {
+  console.log('=== Unmatched Route ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('URL:', req.url);
+  res.status(404).json({ error: 'Not Found', path: req.path, method: req.method });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Proxy running on port ${PORT}`));
