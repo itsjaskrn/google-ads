@@ -39,7 +39,7 @@ app.post('/oauth/token', async (req, res) => {
   }
 });
 
-app.get('/customers:listAccessibleCustomers', async (req, res) => {
+app.get('/customers\\:listAccessibleCustomers', async (req, res) => {
   try {
     console.log('=== List Accessible Customers ===');
     console.log('Has Auth:', !!req.headers.authorization);
