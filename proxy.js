@@ -39,50 +39,24 @@ app.post('/oauth/token', async (req, res) => {
   }
 });
 
-const handleListCustomers = async (req, res) => {
+app.all('*', async (req, res) => {
   try {
-    console.log('=== List Accessible Customers ===');
+    console.log('=== Request ===');
+    console.log('Method:', req.method);
+    console.log('Path:', req.path);
     console.log('Has Auth:', !!req.headers.authorization);
+    
+    if (req.path === '/' || req.path.startsWith('/oauth')) {
+      return res.status(404).json({ error: 'Not Found' });
+    }
     
     if (!req.headers.authorization) {
       return res.status(401).json({ error: 'Missing Authorization header' });
     }
     
-    const response = await axios({
-      method: 'GET',
-      url: `${GOOGLE_ADS_API}/v17/customers:listAccessibleCustomers`,
-      headers: {
-        'Authorization': req.headers.authorization,
-        'developer-token': DEVELOPER_TOKEN
-      }
-    });
-    console.log('Success:', response.status);
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error:', error.response?.status, error.response?.data);
-    res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
-  }
-};
-
-app.get('/customers\\:listAccessibleCustomers', handleListCustomers);
-app.get('/v17/customers\\:listAccessibleCustomers', handleListCustomers);
-
-app.all('/v17/*', async (req, res) => {
-  try {
     let path = req.path.replace(/-/g, '');
     
-    console.log('=== Incoming Request ===');
-    console.log('Method:', req.method);
-    console.log('Path:', path);
-    console.log('Has Auth:', !!req.headers.authorization);
-    console.log('Dev Token:', DEVELOPER_TOKEN ? 'Present' : 'Missing');
-    
-    if (!req.headers.authorization) {
-      console.log('ERROR: Missing Authorization header');
-      return res.status(401).json({ error: 'Missing Authorization header' });
-    }
-    
-    const requestConfig = {
+    const response = await axios({
       method: req.method,
       url: `${GOOGLE_ADS_API}${path}`,
       headers: {
@@ -91,28 +65,14 @@ app.all('/v17/*', async (req, res) => {
         'Content-Type': 'application/json'
       },
       data: req.method !== 'GET' ? req.body : undefined
-    };
+    });
     
-    console.log('Calling:', requestConfig.url);
-    
-    const response = await axios(requestConfig);
     console.log('Success:', response.status);
     res.json(response.data);
   } catch (error) {
-    console.error('=== Error ===');
-    console.error('Status:', error.response?.status);
-    console.error('Data:', JSON.stringify(error.response?.data));
-    console.error('Message:', error.message);
+    console.error('Error:', error.response?.status, error.response?.data);
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
-});
-
-app.use((req, res) => {
-  console.log('=== Unmatched Route ===');
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('URL:', req.url);
-  res.status(404).json({ error: 'Not Found', path: req.path, method: req.method });
 });
 
 const PORT = process.env.PORT || 3000;
