@@ -1,6 +1,5 @@
 const express = require('express');
-const grpc = require('@grpc/grpc-js');
-const protoLoader = require('@grpc/proto-loader');
+const { GoogleAdsApi } = require('google-ads-api');
 const axios = require('axios');
 const cors = require('cors');
 const app = express();
@@ -10,9 +9,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const DEVELOPER_TOKEN = process.env.DEVELOPER_TOKEN || 'IEnKgnvxZWs6VCdF8h8NPw';
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+
+let refreshTokenStore = {};
 
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Google Ads gRPC Gateway' });
+  res.json({ status: 'ok', message: 'Google Ads API Gateway' });
 });
 
 app.get('/oauth/authorize', (req, res) => {
@@ -34,6 +37,11 @@ app.post('/oauth/token', async (req, res) => {
     const response = await axios.post('https://oauth2.googleapis.com/token', params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
+    
+    if (response.data.refresh_token) {
+      refreshTokenStore[response.data.access_token] = response.data.refresh_token;
+    }
+    
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
@@ -50,39 +58,26 @@ app.post('/v17/customers/:customerId/googleAds\\:search', async (req, res) => {
     }
 
     const accessToken = req.headers.authorization.replace('Bearer ', '');
+    const refreshToken = refreshTokenStore[accessToken];
     
-    const packageDefinition = protoLoader.loadSync(
-      require.resolve('google-ads-api/protos/google_ads_service.proto'),
-      { keepCase: true, longs: String, enums: String, defaults: true, oneofs: true }
-    );
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token not found. Please re-authenticate.' });
+    }
     
-    const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
-    const GoogleAdsService = protoDescriptor.google.ads.googleads.v17.services.GoogleAdsService;
-    
-    const metadata = new grpc.Metadata();
-    metadata.add('authorization', `Bearer ${accessToken}`);
-    metadata.add('developer-token', DEVELOPER_TOKEN);
-    metadata.add('login-customer-id', customerId.replace(/-/g, ''));
-    
-    const client = new GoogleAdsService(
-      'googleads.googleapis.com:443',
-      grpc.credentials.createSsl()
-    );
-    
-    const request = {
-      customer_id: customerId.replace(/-/g, ''),
-      query: query,
-      page_size: pageSize || 100
-    };
-    
-    client.Search(request, metadata, (error, response) => {
-      if (error) {
-        console.error('gRPC Error:', error);
-        return res.status(500).json({ error: error.message });
-      }
-      res.json({ results: response.results || [] });
+    const client = new GoogleAdsApi({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      developer_token: DEVELOPER_TOKEN
     });
+
+    const customer = client.Customer({
+      customer_id: customerId.replace(/-/g, ''),
+      refresh_token: refreshToken
+    });
+
+    const results = await customer.query(query);
     
+    res.json({ results });
   } catch (error) {
     console.error('Error:', error.message);
     res.status(500).json({ error: error.message });
@@ -90,4 +85,4 @@ app.post('/v17/customers/:customerId/googleAds\\:search', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`gRPC Gateway running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Gateway running on port ${PORT}`));
