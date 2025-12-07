@@ -1,6 +1,7 @@
 const express = require('express');
-const { GoogleAdsServiceClient } = require('google-ads-node');
-const { GoogleAuth } = require('google-auth-library');
+const grpc = require('@grpc/grpc-js');
+const protoLoader = require('@grpc/proto-loader');
+const axios = require('axios');
 const cors = require('cors');
 const app = express();
 
@@ -29,7 +30,6 @@ app.get('/oauth/authorize', (req, res) => {
 
 app.post('/oauth/token', async (req, res) => {
   try {
-    const axios = require('axios');
     const params = new URLSearchParams(req.body);
     const response = await axios.post('https://oauth2.googleapis.com/token', params, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -51,29 +51,38 @@ app.post('/v17/customers/:customerId/googleAds\\:search', async (req, res) => {
 
     const accessToken = req.headers.authorization.replace('Bearer ', '');
     
-    const client = new GoogleAdsServiceClient({
-      sslCreds: null,
-      credentials: {
-        access_token: accessToken
-      }
-    });
-
+    const packageDefinition = protoLoader.loadSync(
+      require.resolve('google-ads-api/protos/google_ads_service.proto'),
+      { keepCase: true, longs: String, enums: String, defaults: true, oneofs: true }
+    );
+    
+    const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
+    const GoogleAdsService = protoDescriptor.google.ads.googleads.v17.services.GoogleAdsService;
+    
+    const metadata = new grpc.Metadata();
+    metadata.add('authorization', `Bearer ${accessToken}`);
+    metadata.add('developer-token', DEVELOPER_TOKEN);
+    metadata.add('login-customer-id', customerId.replace(/-/g, ''));
+    
+    const client = new GoogleAdsService(
+      'googleads.googleapis.com:443',
+      grpc.credentials.createSsl()
+    );
+    
     const request = {
-      customerId: customerId.replace(/-/g, ''),
+      customer_id: customerId.replace(/-/g, ''),
       query: query,
-      pageSize: pageSize || 100
+      page_size: pageSize || 100
     };
-
-    const [response] = await client.search(request, {
-      otherArgs: {
-        headers: {
-          'developer-token': DEVELOPER_TOKEN,
-          'login-customer-id': customerId.replace(/-/g, '')
-        }
+    
+    client.Search(request, metadata, (error, response) => {
+      if (error) {
+        console.error('gRPC Error:', error);
+        return res.status(500).json({ error: error.message });
       }
+      res.json({ results: response.results || [] });
     });
-
-    res.json({ results: response.results || [] });
+    
   } catch (error) {
     console.error('Error:', error.message);
     res.status(500).json({ error: error.message });
