@@ -39,6 +39,31 @@ app.post('/oauth/token', async (req, res) => {
   }
 });
 
+app.get('/customers:listAccessibleCustomers', async (req, res) => {
+  try {
+    console.log('=== List Accessible Customers ===');
+    console.log('Has Auth:', !!req.headers.authorization);
+    
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: 'Missing Authorization header' });
+    }
+    
+    const response = await axios({
+      method: 'GET',
+      url: `${GOOGLE_ADS_API}/v17/customers:listAccessibleCustomers`,
+      headers: {
+        'Authorization': req.headers.authorization,
+        'developer-token': DEVELOPER_TOKEN
+      }
+    });
+    console.log('Success:', response.status);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error:', error.response?.status, error.response?.data);
+    res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
+  }
+});
+
 app.all('/v17/*', async (req, res) => {
   try {
     let path = req.path.replace(/-/g, '');
