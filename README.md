@@ -1,15 +1,19 @@
-# Google Ads API Proxy
+# Google Ads gRPC-to-REST Gateway
 
-Proxy server for Google Ads API with developer token injection.
+Converts Google Ads gRPC API to REST for Custom GPT integration.
 
 ## Deploy to Vercel
 
 1. Push to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Import your GitHub repository
-4. Deploy
+2. Go to vercel.com
+3. Import repository
+4. Add environment variables:
+   - `DEVELOPER_TOKEN`: Your Google Ads developer token
+   - `CLIENT_ID`: OAuth client ID
+   - `CLIENT_SECRET`: OAuth client secret
+5. Deploy
 
-## Environment Variables
+## Usage
 
-Set in Vercel dashboard:
-- `DEVELOPER_TOKEN`: Your Google Ads developer token
+POST `/v17/customers/{customerId}/googleAds:search`
+Body: `{"query": "SELECT campaign.id FROM campaign", "pageSize": 100}`
