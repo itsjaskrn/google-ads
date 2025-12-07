@@ -39,7 +39,7 @@ app.post('/oauth/token', async (req, res) => {
   }
 });
 
-app.get('/customers\\:listAccessibleCustomers', async (req, res) => {
+const handleListCustomers = async (req, res) => {
   try {
     console.log('=== List Accessible Customers ===');
     console.log('Has Auth:', !!req.headers.authorization);
@@ -62,7 +62,10 @@ app.get('/customers\\:listAccessibleCustomers', async (req, res) => {
     console.error('Error:', error.response?.status, error.response?.data);
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
-});
+};
+
+app.get('/customers\\:listAccessibleCustomers', handleListCustomers);
+app.get('/v17/customers\\:listAccessibleCustomers', handleListCustomers);
 
 app.all('/v17/*', async (req, res) => {
   try {

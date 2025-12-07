@@ -72,7 +72,7 @@ paths:
         "200":
           description: Mutation results
 
-  /customers:listAccessibleCustomers:
+  /v17/customers:listAccessibleCustomers:
     get:
       operationId: listAccessibleCustomers
       summary: List accessible Google Ads customer accounts
