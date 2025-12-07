@@ -42,6 +42,14 @@ app.post('/oauth/token', async (req, res) => {
 app.all('/v17/*', async (req, res) => {
   try {
     let path = req.path.replace(/-/g, '');
+    
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: 'Missing Authorization header' });
+    }
+    
+    console.log('Request:', req.method, path);
+    console.log('Auth:', req.headers.authorization?.substring(0, 20) + '...');
+    
     const response = await axios({
       method: req.method,
       url: `${GOOGLE_ADS_API}${path}`,
@@ -50,11 +58,11 @@ app.all('/v17/*', async (req, res) => {
         'developer-token': DEVELOPER_TOKEN,
         'Content-Type': 'application/json'
       },
-      data: req.body
+      data: req.method !== 'GET' ? req.body : undefined
     });
     res.json(response.data);
   } catch (error) {
-    console.error('Error:', error.response?.data || error.message);
+    console.error('Error:', error.response?.status, error.response?.data || error.message);
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
 });
