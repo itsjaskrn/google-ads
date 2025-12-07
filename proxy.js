@@ -43,14 +43,18 @@ app.all('/v17/*', async (req, res) => {
   try {
     let path = req.path.replace(/-/g, '');
     
+    console.log('=== Incoming Request ===');
+    console.log('Method:', req.method);
+    console.log('Path:', path);
+    console.log('Has Auth:', !!req.headers.authorization);
+    console.log('Dev Token:', DEVELOPER_TOKEN ? 'Present' : 'Missing');
+    
     if (!req.headers.authorization) {
+      console.log('ERROR: Missing Authorization header');
       return res.status(401).json({ error: 'Missing Authorization header' });
     }
     
-    console.log('Request:', req.method, path);
-    console.log('Auth:', req.headers.authorization?.substring(0, 20) + '...');
-    
-    const response = await axios({
+    const requestConfig = {
       method: req.method,
       url: `${GOOGLE_ADS_API}${path}`,
       headers: {
@@ -59,10 +63,18 @@ app.all('/v17/*', async (req, res) => {
         'Content-Type': 'application/json'
       },
       data: req.method !== 'GET' ? req.body : undefined
-    });
+    };
+    
+    console.log('Calling:', requestConfig.url);
+    
+    const response = await axios(requestConfig);
+    console.log('Success:', response.status);
     res.json(response.data);
   } catch (error) {
-    console.error('Error:', error.response?.status, error.response?.data || error.message);
+    console.error('=== Error ===');
+    console.error('Status:', error.response?.status);
+    console.error('Data:', JSON.stringify(error.response?.data));
+    console.error('Message:', error.message);
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
 });
