@@ -5,24 +5,11 @@ info:
   description: OpenAPI spec for Google Ads API v17
 servers:
   - url: https://google-ads-beryl.vercel.app
-components:
-  securitySchemes:
-    google_oauth:
-      type: oauth2
-      flows:
-        authorizationCode:
-          authorizationUrl: https://google-ads-beryl.vercel.app/oauth/authorize
-          tokenUrl: https://google-ads-beryl.vercel.app/oauth/token
-          scopes:
-            https://www.googleapis.com/auth/adwords: Full Google Ads access
-  schemas: {}
 paths:
   /v17/customers/{customerId}/googleAds:search:
     post:
       operationId: searchGoogleAds
       summary: Search Google Ads resources using GAQL
-      security:
-        - google_oauth: []
       parameters:
         - in: path
           name: customerId
@@ -54,26 +41,11 @@ paths:
       responses:
         "200":
           description: Successful query response
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  results:
-                    type: array
-                    items:
-                      type: object
-                  fieldMask:
-                    type: string
-                  nextPageToken:
-                    type: string
 
   /v17/customers/{customerId}/campaigns:mutate:
     post:
       operationId: mutateCampaigns
       summary: Create, update, or remove campaigns
-      security:
-        - google_oauth: []
       parameters:
         - in: path
           name: customerId
@@ -92,68 +64,6 @@ paths:
                   type: array
                   items:
                     type: object
-                    properties:
-                      create:
-                        type: object
-                        description: Campaign to create
-                      update:
-                        type: object
-                        description: Campaign to update
-                      remove:
-                        type: string
-                        description: Resource name to remove
-                      updateMask:
-                        type: string
-                        description: Fields to update
-                partialFailure:
-                  type: boolean
-                  default: false
-                validateOnly:
-                  type: boolean
-                  default: false
-            example:
-              operations:
-                - update:
-                    resourceName: "customers/1234567890/campaigns/987654321"
-                    status: "PAUSED"
-                  updateMask: "status"
-      responses:
-        "200":
-          description: Mutation results
-
-  /v17/customers/{customerId}/adGroups:mutate:
-    post:
-      operationId: mutateAdGroups
-      summary: Create, update, or remove ad groups
-      security:
-        - google_oauth: []
-      parameters:
-        - in: path
-          name: customerId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [operations]
-              properties:
-                operations:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      create:
-                        type: object
-                      update:
-                        type: object
-                      remove:
-                        type: string
-                      updateMask:
-                        type: string
                 partialFailure:
                   type: boolean
                 validateOnly:
@@ -166,18 +76,6 @@ paths:
     get:
       operationId: listAccessibleCustomers
       summary: List accessible Google Ads customer accounts
-      security:
-        - google_oauth: []
       responses:
         "200":
           description: List of accessible customer IDs
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  resourceNames:
-                    type: array
-                    items:
-                      type: string
-                    example: ["customers/1234567890", "customers/9876543210"]
