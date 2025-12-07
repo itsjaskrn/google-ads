@@ -41,9 +41,10 @@ app.post('/oauth/token', async (req, res) => {
 
 app.all('/v17/*', async (req, res) => {
   try {
+    let path = req.path.replace(/-/g, '');
     const response = await axios({
       method: req.method,
-      url: `${GOOGLE_ADS_API}${req.path}`,
+      url: `${GOOGLE_ADS_API}${path}`,
       headers: {
         'Authorization': req.headers.authorization,
         'developer-token': DEVELOPER_TOKEN,
@@ -53,6 +54,7 @@ app.all('/v17/*', async (req, res) => {
     });
     res.json(response.data);
   } catch (error) {
+    console.error('Error:', error.response?.data || error.message);
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
   }
 });

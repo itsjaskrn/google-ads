@@ -16,7 +16,7 @@ paths:
           required: true
           schema:
             type: string
-          description: Google Ads customer ID (without hyphens)
+          description: Google Ads customer ID (with or without hyphens, e.g., 9550703321 or 955-070-3321)
       requestBody:
         required: true
         content:
