@@ -73,9 +73,15 @@ paths:
           description: Mutation results
 
   /v17/customers:listAccessibleCustomers:
-    get:
+    post:
       operationId: listAccessibleCustomers
       summary: List accessible Google Ads customer accounts
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         "200":
           description: List of accessible customer IDs
