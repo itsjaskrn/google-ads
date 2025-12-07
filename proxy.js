@@ -57,6 +57,10 @@ app.all('*', async (req, res) => {
     
     let path = decodeURIComponent(req.originalUrl).replace(/-/g, '');
     
+    if (path.includes('listAccessibleCustomers')) {
+      path = '/customers:listAccessibleCustomers';
+    }
+    
     console.log('Forwarding to:', `${GOOGLE_ADS_API}${path}`);
     
     const response = await axios({
