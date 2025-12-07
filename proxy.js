@@ -1,5 +1,6 @@
 const express = require('express');
-const { GoogleAdsApi } = require('google-ads-api');
+const { GoogleAdsServiceClient } = require('google-ads-node');
+const { GoogleAuth } = require('google-auth-library');
 const cors = require('cors');
 const app = express();
 
@@ -44,31 +45,38 @@ app.post('/v17/customers/:customerId/googleAds\\:search', async (req, res) => {
     const { customerId } = req.params;
     const { query, pageSize } = req.body;
     
-    console.log('Search request:', customerId, query);
-    
     if (!req.headers.authorization) {
       return res.status(401).json({ error: 'Missing Authorization header' });
     }
 
     const accessToken = req.headers.authorization.replace('Bearer ', '');
     
-    const client = new GoogleAdsApi({
-      client_id: process.env.CLIENT_ID || '',
-      client_secret: process.env.CLIENT_SECRET || '',
-      developer_token: DEVELOPER_TOKEN
+    const client = new GoogleAdsServiceClient({
+      sslCreds: null,
+      credentials: {
+        access_token: accessToken
+      }
     });
 
-    const customer = client.Customer({
-      customer_id: customerId.replace(/-/g, ''),
-      access_token: accessToken
+    const request = {
+      customerId: customerId.replace(/-/g, ''),
+      query: query,
+      pageSize: pageSize || 100
+    };
+
+    const [response] = await client.search(request, {
+      otherArgs: {
+        headers: {
+          'developer-token': DEVELOPER_TOKEN,
+          'login-customer-id': customerId.replace(/-/g, '')
+        }
+      }
     });
 
-    const results = await customer.query(query, { page_size: pageSize || 100 });
-    
-    res.json({ results });
+    res.json({ results: response.results || [] });
   } catch (error) {
-    console.error('Error:', error.message, error.stack);
-    res.status(500).json({ error: error.message, details: error.toString() });
+    console.error('Error:', error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
