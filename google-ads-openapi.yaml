@@ -1,22 +1,20 @@
 openapi: 3.1.0
 info:
   title: Google Ads API
-  version: "1.0.1"
-  description: OpenAPI spec for Google Ads API v17
+  version: "1.0.2"
 servers:
   - url: https://google-ads-beryl.vercel.app
 paths:
   /v17/customers/{customerId}/googleAds:search:
     post:
       operationId: searchGoogleAds
-      summary: Search Google Ads resources using GAQL
+      summary: Search Google Ads data using GAQL
       parameters:
         - in: path
           name: customerId
           required: true
           schema:
             type: string
-          description: Google Ads customer ID (with or without hyphens, e.g., 9550703321 or 955-070-3321)
       requestBody:
         required: true
         content:
@@ -27,61 +25,12 @@ paths:
               properties:
                 query:
                   type: string
-                  description: Google Ads Query Language (GAQL) query
                 pageSize:
                   type: integer
-                  description: Number of results per page (max 10000)
                   default: 10000
-                pageToken:
-                  type: string
-                  description: Token for pagination
             example:
-              query: "SELECT campaign.id, campaign.name, campaign.status, metrics.impressions, metrics.clicks, metrics.cost_micros FROM campaign WHERE segments.date DURING LAST_30_DAYS"
-              pageSize: 10000
+              query: "SELECT campaign.id, campaign.name, campaign.status FROM campaign"
+              pageSize: 100
       responses:
         "200":
-          description: Successful query response
-
-  /v17/customers/{customerId}/campaigns:mutate:
-    post:
-      operationId: mutateCampaigns
-      summary: Create, update, or remove campaigns
-      parameters:
-        - in: path
-          name: customerId
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [operations]
-              properties:
-                operations:
-                  type: array
-                  items:
-                    type: object
-                partialFailure:
-                  type: boolean
-                validateOnly:
-                  type: boolean
-      responses:
-        "200":
-          description: Mutation results
-
-  /v17/customers:listAccessibleCustomers:
-    post:
-      operationId: listAccessibleCustomers
-      summary: List accessible Google Ads customer accounts
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        "200":
-          description: List of accessible customer IDs
+          description: Success
