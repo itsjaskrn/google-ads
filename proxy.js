@@ -5,6 +5,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 const DEVELOPER_TOKEN = process.env.DEVELOPER_TOKEN || 'IEnKgnvxZWs6VCdF8h8NPw';
 const GOOGLE_ADS_API = 'https://googleads.googleapis.com';
@@ -24,7 +25,10 @@ app.get('/oauth/authorize', (req, res) => {
 
 app.post('/oauth/token', async (req, res) => {
   try {
-    const response = await axios.post('https://oauth2.googleapis.com/token', req.body);
+    const params = new URLSearchParams(req.body);
+    const response = await axios.post('https://oauth2.googleapis.com/token', params, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
     res.json(response.data);
   } catch (error) {
     res.status(error.response?.status || 500).json(error.response?.data || { error: error.message });
