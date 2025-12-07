@@ -10,6 +10,10 @@ app.use(express.urlencoded({ extended: true }));
 const DEVELOPER_TOKEN = process.env.DEVELOPER_TOKEN || 'IEnKgnvxZWs6VCdF8h8NPw';
 const GOOGLE_ADS_API = 'https://googleads.googleapis.com';
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Google Ads API Proxy' });
+});
+
 app.get('/oauth/authorize', (req, res) => {
   const params = new URLSearchParams({
     client_id: req.query.client_id,
